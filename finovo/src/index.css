@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme{
+  --color-primary: #1DB97A;
+  --color-primary-dark: #006C44;
+  --color-primary-light: #2DC282;
+  --color-secondary:#7C5CFC;
+  --color-secondary-dark:#613DE0;
+  --color-secondary-light:#AF9EFF;
+  --color-teriary:#F5A623;
+  --color-teriary-dark:#A46B00 ;
+  --color-tertiary-light:#FFB955;
+  --color-neutral:#F9F7F4;
+  --color-neutral-dark:#F9F7F4;
+}
+@layer base{
+  @font-face{
+    font-family: 'open_sans';
+    src: url('public/fonts/open_sans/OpenSans-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+  }
+  @font-face{
+    font-family: 'open_sans';
+    src: url('public/fonts/open_sans/OpenSans-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+  }
+  @font-face{
+    font-family: 'open_sans';
+    src: url('public/fonts/open_sans/OpenSans-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+  }
+  @font-face{
+    font-family: 'open_sans';
+    src: url('public/fonts/open_sans/OpenSans-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+  }
+  @font-face{
+    font-family: 'open_sans';
+    src: url('public/fonts/open_sans/OpenSans-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+  }
+  @font-face{
+    font-family: 'open_sans';
+    src: url('public/fonts/open_sans/OpenSans-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: 'Plus Jakarta Sans Regular';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Plus Jakarta Sans Regular'), url('public/fonts/PlusJakarta_Sans/PlusJakartaSans[wght].woff') format('woff');
+  }
+  @font-face {
+    font-family: 'Plus Jakarta Sans Italic';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Plus Jakarta Sans Italic'), url('public/fonts/PlusJakarta_Sans/PlusJakartaSans-Italic[wght].woff') format('woff');
+  }
+  *{
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer components{
+  .btn-primary{
+    background-color:var(--color-primary);
+    color:var(--color-neutral);
+    font-weight:normal;
+  }
+  .btn-outlined{
+      border: 1px solid var(--color-neutral-dark);
+      color:var(--color-neutral-dark);
+  }
+  .btn-inverted{
+    background-color:1px solid var(--color-neutral-dark);
+    color:var(--color-neutral);
+  }
+
+}
