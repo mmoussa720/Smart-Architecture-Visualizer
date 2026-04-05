@@ -53,7 +53,6 @@ const NavBar = () => {
                           <a href="#upload" className="cta">Get Started</a>
                       </>
                   )}
-
               </div>
           </nav>
       </header>
