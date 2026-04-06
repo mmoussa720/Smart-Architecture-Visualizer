@@ -1,6 +1,7 @@
 import NavBar from "~/components/NavBar";
 import {ArrowRight, ArrowUpRight, Clock, Layers} from "lucide-react";
 import Button from "~/components/ui/Button";
+import Upload from "~/components/Upload";
 
 
 export default function Home() {
@@ -38,7 +39,7 @@ export default function Home() {
                 <h3>Upload your plan</h3>
                 <p>JPG,PNG, formats up to 10MB</p>
               </div>
-              <p>Upload images</p>
+              <Upload />
             </div>
         </div>
       </section>
