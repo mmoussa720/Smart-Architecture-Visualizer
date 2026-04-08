@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {useOutletContext} from "react-router";
 import {CheckCircle2, ImageIcon, UploadIcon} from "lucide-react";
 import {PROGRESS_INCREMENT, PROGRESS_INTERVAL_MS, REDIRECT_DELAY_MS} from "~/lib/Constants";
@@ -12,103 +12,77 @@ const Upload = ({onComplete = () => {}}: UploadProps) => {
     const [isDragging,setIsDragging]=useState(false);
     const [progress,setProgress]=useState(0);
     const {isSignedIn}=useOutletContext<AuthContext>();
-
-    const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const handleDragOver=(e:React.DragEvent)=>{
+        e.preventDefault();
+        if(!isSignedIn)return;
+        setIsDragging(true);
+    }
+    const handleDragLeave=(e:React.DragEvent)=>{
+        setIsDragging(false);
+    }
+    const handleDrop=(e:React.DragEvent)=>{
+        e.preventDefault();
+        setIsDragging(false);
+        if(!isSignedIn)return;
+        const droppedFile=e.dataTransfer.files[0];
+        const allowedTypes=['image/jpeg','image/png'];
+        if(droppedFile && allowedTypes.includes(droppedFile.type)){
+            processFile(droppedFile);
+        }
+    }
+    const handleChange=(e:React.ChangeEvent<HTMLInputElement>)=>{
+        if(!isSignedIn) return;
+        const selectedFile=e.target.files?.[0];
+        if(selectedFile){
+            processFile(selectedFile);
+        }
+    }
     useEffect(() => {
-        return () => {
-            if (progressIntervalRef.current) {
-                clearInterval(progressIntervalRef.current);
+        return ()=>{
+            if(intervalRef.current){
+                clearInterval(intervalRef.current);
+                intervalRef.current=null;
             }
-
-            if (redirectTimeoutRef.current) {
-                clearTimeout(redirectTimeoutRef.current);
+            if(timeoutRef.current){
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current=null;
             }
-        };
+        }
     }, []);
 
-    const resetTimers = () => {
-        if (progressIntervalRef.current) {
-            clearInterval(progressIntervalRef.current);
-            progressIntervalRef.current = null;
-        }
-
-        if (redirectTimeoutRef.current) {
-            clearTimeout(redirectTimeoutRef.current);
-            redirectTimeoutRef.current = null;
-        }
-    };
-
-    const processFile = (selectedFile: File) => {
-        if (!isSignedIn) return;
-
-        resetTimers();
-        setFile(selectedFile);
+    const processFile=useCallback((file:File)=>{
+        if(!isSignedIn)return;
+        setFile(file);
         setProgress(0);
-        setIsDragging(false);
-
-        const reader = new FileReader();
-
-        reader.onload = () => {
-            const base64Data = typeof reader.result === "string" ? reader.result : "";
-            if (!base64Data) return;
-
-            progressIntervalRef.current = setInterval(() => {
-                setProgress((currentProgress) => {
-                    const nextProgress = Math.min(currentProgress + PROGRESS_INCREMENT, 100);
-
-                    if (nextProgress === 100) {
-                        if (progressIntervalRef.current) {
-                            clearInterval(progressIntervalRef.current);
-                            progressIntervalRef.current = null;
-                        }
-
-                        redirectTimeoutRef.current = setTimeout(() => {
-                            onComplete(base64Data);
-                        }, REDIRECT_DELAY_MS);
-                    }
-
-                    return nextProgress;
-                });
-            }, PROGRESS_INTERVAL_MS);
+        const reader=new FileReader();
+        reader.onerror=()=>{
+            setFile(null);
+            setProgress(0);
         };
-
-        reader.readAsDataURL(selectedFile);
-    };
-
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (!isSignedIn) return;
-
-        const selectedFile = event.target.files?.[0];
-        if (!selectedFile) return;
-
-        processFile(selectedFile);
-        event.target.value = "";
-    };
-
-    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        if (!isSignedIn) return;
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        if (!isSignedIn) return;
-        setIsDragging(false);
-    };
-
-    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        if (!isSignedIn) return;
-
-        const droppedFile = event.dataTransfer.files?.[0];
-        setIsDragging(false);
-
-        if (!droppedFile) return;
-        processFile(droppedFile);
-    };
+        reader.onloadend=()=>{
+            const base64Data=reader.result as string;
+            intervalRef.current=setInterval(()=>{
+                setProgress((prev)=>{
+                    const next=prev+PROGRESS_INCREMENT;
+                    if(next>=100){
+                        if(intervalRef.current){
+                            clearInterval(intervalRef.current);
+                            intervalRef.current=null;
+                        }
+                        timeoutRef.current=setTimeout(()=>{
+                            onComplete?.(base64Data);
+                            timeoutRef.current=null;
+                        },REDIRECT_DELAY_MS);
+                        return 100;
+                    };
+                    return next;
+                });
+            },PROGRESS_INTERVAL_MS);
+        };
+        reader.readAsDataURL(file);
+    },[isSignedIn,onComplete]);
 
   return (
     <div className="upload">
@@ -123,7 +97,7 @@ const Upload = ({onComplete = () => {}}: UploadProps) => {
                     <input
                         type="file"
                         className="drop-input"
-                        accept=".jpg,.jpeg,png"
+                        accept=".jpg,.jpeg,.png"
                         disabled={!isSignedIn}
                         onChange={handleChange}
                     />
@@ -134,11 +108,12 @@ const Upload = ({onComplete = () => {}}: UploadProps) => {
                         <p>
                             {isSignedIn?("Click to upload or just drag and drop the file."):("Sign in or sign up to upload")}
                         </p>
-                        <p className="help">Max 20 MB</p>
+                        <p className="help">Max 50 MB</p>
                     </div>
                 </div>
             ):(
-                <div className="status-status">
+                <div className="upload-status">
+                    <div className="status-content">
                     <div className="status-icon">
                         {progress==100?(
                             <CheckCircle2 className="check" />
@@ -153,6 +128,7 @@ const Upload = ({onComplete = () => {}}: UploadProps) => {
                             {progress<100?'Analyzing Floor Plan...':'Redirecting...'}
                         </p>
                     </div>
+                </div>
                 </div>
             )
         }

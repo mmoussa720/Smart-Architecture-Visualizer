@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Box} from "lucide-react";
 import Button from "~/components/ui/Button";
 import {Links, Meta, ScrollRestoration, useOutletContext} from "react-router";
@@ -6,6 +6,11 @@ import {Links, Meta, ScrollRestoration, useOutletContext} from "react-router";
 const NavBar = () => {
     const {isSignedIn,userName,signIn,signOut}=useOutletContext<AuthContext>();
     const username=userName;
+    useEffect(() => {
+        console.log(isSignedIn);
+        console.log(userName);
+
+    }, []);
     const handleAuthClick=async()=>{
         if(isSignedIn){
             try{
