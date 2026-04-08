@@ -20,6 +20,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const classes = [
+      "cursor-pointer",
     "btn",
     `btn--${variant}`,
     `btn--${size}`,
